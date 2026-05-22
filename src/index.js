@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const rendezVousRoutes = require('./routes/rendezVousRoutes');
+const patientRoutes = require('./routes/patientRoutes');
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rendez-vous', rendezVousRoutes);
+app.use('/api/patient', patientRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
