@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const rendezVousRoutes = require('./routes/rendezVousRoutes');
+const secretaireRoutes = require('./routes/secretaireRoutes');  // ← AJOUTE
+const adminRoutes = require('./routes/adminRoutes');              // ← AJOUTE
 
 dotenv.config();
 
@@ -18,6 +20,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rendez-vous', rendezVousRoutes);
+app.use('/api/secretaire', secretaireRoutes);  // ← AJOUTE
+app.use('/api/admin', adminRoutes);              // ← AJOUTE
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
