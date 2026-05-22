@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const rendezVousRoutes = require('./routes/rendezVousRoutes');
+const medecinRoutes = require('./routes/medecinRoutes'); // ✅ ajoute cette ligne
+const { demarrerTacheNotifications } = require('./controllers/notificationController');
 
 dotenv.config();
 
@@ -18,8 +20,10 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rendez-vous', rendezVousRoutes);
+app.use('/api/medecin', medecinRoutes); // ✅ ajoute cette ligne
 
 const PORT = process.env.PORT || 3000;
+demarrerTacheNotifications();
 app.listen(PORT, () => {
   console.log(`🚀 Serveur lancé sur le port ${PORT}`);
 });
