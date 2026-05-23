@@ -6,6 +6,8 @@ const rendezVousRoutes = require('./routes/rendezVousRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const secretaireRoutes = require('./routes/secretaireRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const medecinRoutes = require('./routes/medecinRoutes');
+const { demarrerTacheNotifications } = require('./controllers/notificationController');
 
 dotenv.config();
 
@@ -24,8 +26,10 @@ app.use('/api/rendez-vous', rendezVousRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/secretaire', secretaireRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/medecin', medecinRoutes);
 
 const PORT = process.env.PORT || 3000;
+demarrerTacheNotifications();
 app.listen(PORT, () => {
   console.log(`🚀 Serveur lancé sur le port ${PORT}`);
 });
