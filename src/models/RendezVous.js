@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config');
+const { sequelize } = require('../config/database');
 
 const RendezVous = sequelize.define('RendezVous', {
   id: {
@@ -7,34 +7,41 @@ const RendezVous = sequelize.define('RendezVous', {
     autoIncrement: true,
     primaryKey: true,
   },
-  patientId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  medecinId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  date: {
-    type: DataTypes.DATEONLY,
-    allowNull: false,
-  },
-  heure: {
-    type: DataTypes.TIME,
-    allowNull: false,
-  },
-  motif: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  statut: {
-    type: DataTypes.ENUM('confirmé', 'annulé', 'en attente'),
-    defaultValue: 'en attente',
+  dateHeure: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
   duree: {
     type: DataTypes.INTEGER,
-    defaultValue: 30,
+    allowNull: true,
   },
+  motif: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  statut: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  estPourTiers: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  id_dossier_medical: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  id_patient: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  id_creneau: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+}, {
+  tableName: 'rendezvous',
+  timestamps: false,
 });
 
 module.exports = RendezVous;

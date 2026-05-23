@@ -5,7 +5,7 @@ const User = require('../models/User');
 // Inscription
 exports.register = async (req, res) => {
   try {
-    const { nom, prenom, email, password, role } = req.body;
+    const { nom, prenom, email, password } = req.body;
 
     // Vérifier si l'email existe déjà
     const existingUser = await User.findOne({ where: { email } });
@@ -21,8 +21,8 @@ exports.register = async (req, res) => {
       nom,
       prenom,
       email,
-      password: hashedPassword,
-      role: role || 'patient',
+      motDePasse: hashedPassword,
+      dateCreation: new Date(),
     });
 
     res.status(201).json({ message: 'Compte créé avec succès !' });
@@ -43,14 +43,14 @@ exports.login = async (req, res) => {
     }
 
     // Vérifier le mot de passe
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.motDePasse);
     if (!isMatch) {
       return res.status(400).json({ message: 'Mot de passe incorrect' });
     }
 
     // Créer le token JWT
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -63,7 +63,6 @@ exports.login = async (req, res) => {
         nom: user.nom,
         prenom: user.prenom,
         email: user.email,
-        role: user.role,
       },
     });
   } catch (error) {

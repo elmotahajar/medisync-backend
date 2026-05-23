@@ -1,7 +1,5 @@
-// src/models/Disponibilite.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config');
-const Medecin = require('./Medecin');
+const { sequelize } = require('../config/database');
 
 const Disponibilite = sequelize.define('Disponibilite', {
   id: {
@@ -9,44 +7,29 @@ const Disponibilite = sequelize.define('Disponibilite', {
     primaryKey: true,
     autoIncrement: true,
   },
-
-  medecinId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: Medecin,
-      key: 'id',
-    },
-    onDelete: 'CASCADE',
+  jour: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
-
-  date: {
-    type: DataTypes.DATEONLY, // ex: "2026-05-22"
-    allowNull: false,
-  },
-
   heureDebut: {
-    type: DataTypes.TIME, // ex: "09:00:00"
-    allowNull: false,
+    type: DataTypes.TIME,
+    allowNull: true,
   },
-
   heureFin: {
-    type: DataTypes.TIME, // ex: "09:30:00"
-    allowNull: false,
+    type: DataTypes.TIME,
+    allowNull: true,
   },
-
-  estDisponible: {
+  estConge: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true, // false = créneau bloqué manuellement
+    defaultValue: false,
   },
-
+  id_medecin: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {
-  tableName: 'disponibilites',
-  timestamps: true,
+  tableName: 'disponibilite',
+  timestamps: false,
 });
-
-// Association
-Disponibilite.belongsTo(Medecin, { foreignKey: 'medecinId', as: 'medecin' });
-Medecin.hasMany(Disponibilite,   { foreignKey: 'medecinId', as: 'disponibilites' });
 
 module.exports = Disponibilite;
