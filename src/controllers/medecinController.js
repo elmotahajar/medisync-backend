@@ -303,3 +303,86 @@ exports.getPrescriptionsPatient = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
   }
 };
+// GET /api/medecin/recherche?specialite=&ville=&langue=&disponibilite=
+exports.rechercheMedecin = async (req, res) => {
+  try {
+    const { specialite, ville, langue, disponibilite } = req.query;
+
+    const where = { isActif: true };
+
+    if (specialite) {
+      where.specialite = { [Op.like]: `%${specialite}%` };
+    }
+
+    if (langue) {
+      where.languesParlees = { [Op.like]: `%${langue}%` };
+    }
+
+    const medecins = await Medecin.findAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: 'utilisateur',
+          attributes: ['nom', 'prenom', 'email'],
+          where: ville ? { ville: { [Op.like]: `%${ville}%` } } : {},
+        },
+        ...(disponibilite ? [{
+          model: Disponibilite,
+          as: 'disponibilites',
+          where: {
+            date: disponibilite,
+            estDisponible: true,
+          },
+          required: true,
+        }] : []),
+      ],
+    });
+
+    res.json(medecins);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
+// GET /api/medecin/disponibilites/:medecinId?date=2026-05-22
+exports.getDisponibilitesPubliques = async (req, res) => {
+  try {
+    const { medecinId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ message: 'La date est obligatoire' });
+    }
+
+    // Vérifier si le médecin est en congé ce jour
+    const enConge = await Conge.findOne({
+      where: {
+        medecinId,
+        dateDebut: { [Op.lte]: date },
+        dateFin:   { [Op.gte]: date },
+      },
+    });
+
+    if (enConge) {
+      return res.json({ 
+        disponible: false, 
+        message: 'Médecin en congé ce jour', 
+        creneaux: [] 
+      });
+    }
+
+    // Récupérer les créneaux disponibles
+    const creneaux = await Disponibilite.findAll({
+      where: {
+        medecinId,
+        date,
+        estDisponible: true,
+      },
+      order: [['heureDebut', 'ASC']],
+    });
+
+    res.json({ disponible: true, creneaux });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};

@@ -22,5 +22,12 @@ router.post('/factures', secretaireController.emettreFacture);
 router.get('/factures', secretaireController.listerFactures);
 router.patch('/factures/:id/payer', secretaireController.enregistrerPaiement);
 router.get('/factures/:id/pdf', secretaireController.exporterFacturePDF);
+// Confirmation et modification RDV
+router.put('/rdv/:id/confirmer', secretaireController.confirmerRdv);
+router.put('/rdv/:id/modifier',  secretaireController.modifierRdv);
+router.put('/rdv/:id/annuler',   secretaireController.annulerRdv);
+// Actes réalisés
+router.get('/feuilles-soins/:id/actes',  secretaireController.getActes);
+router.put('/feuilles-soins/:id/actes',  secretaireController.modifierActes);
 
 module.exports = router;

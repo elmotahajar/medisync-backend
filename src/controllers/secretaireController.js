@@ -359,3 +359,114 @@ exports.exporterFacturePDF = async (req, res) => {
     return res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 };
+// ─────────────────────────────────────────
+// CONFIRMATION ET MODIFICATION RDV
+// ─────────────────────────────────────────
+
+// PUT /api/secretaire/rdv/:id/confirmer
+exports.confirmerRdv = async (req, res) => {
+  try {
+    const rdv = await RendezVous.findByPk(req.params.id);
+
+    if (!rdv) {
+      return res.status(404).json({ message: 'Rendez-vous introuvable' });
+    }
+
+    await rdv.update({ statut: 'confirme' });
+
+    res.json({ message: '✅ Rendez-vous confirmé', rdv });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
+
+// PUT /api/secretaire/rdv/:id/modifier
+exports.modifierRdv = async (req, res) => {
+  try {
+    const { dateHeure, motif, notes } = req.body;
+
+    const rdv = await RendezVous.findByPk(req.params.id);
+
+    if (!rdv) {
+      return res.status(404).json({ message: 'Rendez-vous introuvable' });
+    }
+
+    await rdv.update({
+      ...(dateHeure && { dateHeure }),
+      ...(motif && { motif }),
+      ...(notes && { notes }),
+    });
+
+    res.json({ message: '✅ Rendez-vous modifié', rdv });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
+
+// PUT /api/secretaire/rdv/:id/annuler
+exports.annulerRdv = async (req, res) => {
+  try {
+    const rdv = await RendezVous.findByPk(req.params.id);
+
+    if (!rdv) {
+      return res.status(404).json({ message: 'Rendez-vous introuvable' });
+    }
+
+    await rdv.update({ statut: 'annule' });
+
+    res.json({ message: '✅ Rendez-vous annulé', rdv });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
+// ─────────────────────────────────────────
+// SAISIE ET MODIFICATION DES ACTES
+// ─────────────────────────────────────────
+
+// PUT /api/secretaire/feuilles-soins/:id/actes
+exports.modifierActes = async (req, res) => {
+  try {
+    const { actes } = req.body;
+
+    if (!actes || actes.length === 0) {
+      return res.status(400).json({ message: 'Au moins un acte est requis' });
+    }
+
+    const feuille = await FeuilleSoins.findByPk(req.params.id);
+
+    if (!feuille) {
+      return res.status(404).json({ message: 'Feuille de soins introuvable' });
+    }
+
+    if (feuille.statut === 'VALIDEE') {
+      return res.status(400).json({ message: 'Impossible de modifier une feuille validée' });
+    }
+
+    // Recalculer le total
+    const totalHonoraires = actes.reduce(
+      (sum, acte) => sum + (acte.quantite || 1) * (acte.prixUnitaire || acte.prix || 0),
+      0
+    );
+
+    await feuille.update({ actes, totalHonoraires });
+
+    res.json({ message: '✅ Actes mis à jour', feuille });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
+
+// GET /api/secretaire/feuilles-soins/:id/actes
+exports.getActes = async (req, res) => {
+  try {
+    const feuille = await FeuilleSoins.findByPk(req.params.id);
+
+    if (!feuille) {
+      return res.status(404).json({ message: 'Feuille de soins introuvable' });
+    }
+
+    res.json({ actes: feuille.actes, total: feuille.totalHonoraires });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};

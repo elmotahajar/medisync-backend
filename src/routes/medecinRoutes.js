@@ -42,3 +42,5 @@ router.post('/prescription',              auth, medecinController.creerPrescript
 router.get('/prescriptions/:patientId',   auth, medecinController.getPrescriptionsPatient);
 
 module.exports = router;
+router.get('/recherche', medecinController.rechercheMedecin); // public, pas de auth
+router.get('/disponibilites/:medecinId', medecinController.getDisponibilitesPubliques); // public

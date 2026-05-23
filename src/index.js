@@ -8,6 +8,7 @@ const secretaireRoutes = require('./routes/secretaireRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const medecinRoutes = require('./routes/medecinRoutes');
 const { demarrerTacheNotifications } = require('./controllers/notificationController');
+const medicamentRoutes = require('./routes/medicamentRoutes');
 
 dotenv.config();
 
@@ -33,3 +34,4 @@ demarrerTacheNotifications();
 app.listen(PORT, () => {
   console.log(`🚀 Serveur lancé sur le port ${PORT}`);
 });
+app.use('/api/medicaments', medicamentRoutes);

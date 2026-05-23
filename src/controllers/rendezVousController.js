@@ -81,3 +81,37 @@ exports.cancelRendezVous = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
+// POST /api/rendez-vous/urgence
+exports.creerRdvUrgence = async (req, res) => {
+  try {
+    const { patientId, medecinId, motif, notes } = req.body;
+
+    if (!patientId || !medecinId) {
+      return res.status(400).json({ message: 'patientId et medecinId sont obligatoires' });
+    }
+
+    // Heure actuelle + 15 minutes
+    const maintenant = new Date();
+    const dateHeure = new Date(maintenant.getTime() + 15 * 60 * 1000);
+
+    const rdvUrgence = await RendezVous.create({
+      patientId,
+      medecinId,
+      dateHeure,
+      motif: motif || 'Urgence',
+      statut: 'confirme',
+      typeConsultation: 'urgence',
+      notes: notes || '',
+      rappel24hEnvoye: true, // pas de rappel pour urgence
+      rappel1hEnvoye: true,
+    });
+
+    res.status(201).json({ 
+      message: '🚨 RDV urgence créé avec succès', 
+      rdv: rdvUrgence,
+      heure: dateHeure.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
+  }
+};
