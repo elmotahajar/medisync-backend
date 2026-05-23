@@ -42,3 +42,10 @@ sequelize.sync({ alter: true })
     });
   })
   .catch((err) => console.error('❌ Erreur base de données:', err));
+const twoFARoutes  = require('./routes/twoFARoutes');
+const salleRoutes  = require('./routes/salleRoutes');
+const rapportRoutes = require('./routes/rapportRoutes');
+
+app.use('/api/auth/2fa',     twoFARoutes);
+app.use('/api/salles',       salleRoutes);
+app.use('/api/admin/rapports', rapportRoutes);

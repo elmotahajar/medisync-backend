@@ -18,3 +18,12 @@ FeuilleSoins.belongsTo(User, { as: 'medecin',  foreignKey: 'medecinId' });
 FeuilleSoins.belongsTo(User, { as: 'secretaire', foreignKey: 'secretaireId' });
 
 module.exports = { sequelize, User, RendezVous, Facture, FeuilleSoins };
+const AuditLog          = require('./AuditLog');
+const SalleConsultation = require('./SalleConsultation');
+const Tarif             = require('./Tarif');
+
+module.exports = {
+  sequelize, User, RendezVous,
+  Facture, FeuilleSoins,
+  AuditLog, SalleConsultation, Tarif  // ← ajoute ces 3
+};
