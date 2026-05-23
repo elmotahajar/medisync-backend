@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const sequelize = require('./config');
 const authRoutes = require('./routes/authRoutes');
 const rendezVousRoutes = require('./routes/rendezVousRoutes');
 const patientRoutes = require('./routes/patientRoutes');
@@ -30,8 +31,14 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/medecin', medecinRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
-const PORT = process.env.PORT || 3000;
-demarrerTacheNotifications();
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur le port ${PORT}`);
-});
+// Connexion base de données
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('✅ Base de données connectée');
+    const PORT = process.env.PORT || 3000;
+    demarrerTacheNotifications();
+    app.listen(PORT, () => {
+      console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+    });
+  })
+  .catch((err) => console.error('❌ Erreur base de données:', err));
