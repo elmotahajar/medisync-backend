@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const rendezVousRoutes = require('./routes/rendezVousRoutes');
 const patientRoutes = require('./routes/patientRoutes');
+const secretaireRoutes = require('./routes/secretaireRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/rendez-vous', rendezVousRoutes);
 app.use('/api/patient', patientRoutes);
+app.use('/api/secretaire', secretaireRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
