@@ -7,6 +7,7 @@ const patientRoutes = require('./routes/patientRoutes');
 const secretaireRoutes = require('./routes/secretaireRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const medecinRoutes = require('./routes/medecinRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 const { demarrerTacheNotifications } = require('./controllers/notificationController');
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use('/api/patient', patientRoutes);
 app.use('/api/secretaire', secretaireRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/medecin', medecinRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 const PORT = process.env.PORT || 3000;
 demarrerTacheNotifications();

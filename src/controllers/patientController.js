@@ -47,11 +47,23 @@ exports.getHistorique = async (req, res) => {
 // Uploader un document médical
 exports.uploadDocument = async (req, res) => {
   try {
-    const { nom, type, contenu } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: 'Aucun fichier uploadé' });
+    }
+
     const patientId = req.user.id;
+    const document = {
+      patientId,
+      nom: req.file.originalname,
+      type: req.file.mimetype,
+      taille: req.file.size,
+      chemin: req.file.path,
+      dateUpload: new Date()
+    };
+
     res.status(201).json({
       message: 'Document uploadé avec succès !',
-      document: { patientId, nom, type, contenu }
+      document
     });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur', error });

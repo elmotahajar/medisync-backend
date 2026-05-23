@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { envoyerConfirmationRDV, envoyerAnnulationRDV } = require('./emailController');
 
 let RendezVous = [];
 let nextId = 1;
@@ -20,6 +20,7 @@ exports.createRendezVous = async (req, res) => {
     };
 
     RendezVous.push(rdv);
+    await envoyerConfirmationRDV(req.user.email, rdv);
 
     res.status(201).json({
       message: 'Rendez-vous créé avec succès !',
@@ -75,8 +76,43 @@ exports.cancelRendezVous = async (req, res) => {
     }
 
     RendezVous[index].statut = 'annulé';
+    await envoyerAnnulationRDV(req.user.email, RendezVous[index]);
 
     res.json({ message: 'Rendez-vous annulé avec succès !' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
+// Créer un rendez-vous pour un tiers
+exports.createRendezVousTiers = async (req, res) => {
+  try {
+    const { medecinId, date, heure, motif, tiers } = req.body;
+    const patientId = req.user.id;
+
+    const rdv = {
+      id: nextId++,
+      patientId,
+      medecinId,
+      date,
+      heure,
+      motif,
+      statut: 'confirmé',
+      tiers: {
+        nom: tiers.nom,
+        prenom: tiers.prenom,
+        dateNaissance: tiers.dateNaissance,
+        relation: tiers.relation
+      }
+    };
+
+    RendezVous.push(rdv);
+    await envoyerConfirmationRDV(req.user.email, rdv);
+
+    res.status(201).json({
+      message: 'Rendez-vous créé pour le tiers avec succès !',
+      rendezVous: rdv
+    });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur', error });
   }
