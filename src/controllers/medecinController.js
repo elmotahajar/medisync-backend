@@ -1,27 +1,25 @@
-// src/controllers/medecinController.js
 const Medecin = require('../models/Medecin');
 const Disponibilite = require('../models/Disponibilite');
-const Conge = require('../models/Conge');
-const CompteRendu = require('../models/CompteRendu');
-const Prescription = require('../models/Prescription');
 const RendezVous = require('../models/RendezVous');
 const User = require('../models/User');
 const { Op } = require('sequelize');
 
-// ─────────────────────────────────────────
-// 1. PROFIL MÉDECIN
-// ─────────────────────────────────────────
-
 // GET /medecin/profil
 exports.getProfil = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({
-      where: { userId: req.user.id },
-      include: [{ model: User, as: 'utilisateur',
-        attributes: ['nom', 'prenom', 'email'] }],
-    });
+    const user = await User.findOne({ where: { id: req.user.id } });
+    const medecin = await Medecin.findOne({ where: { id_utilisateur: req.user.id } });
     if (!medecin) return res.status(404).json({ message: 'Profil médecin introuvable' });
-    res.json(medecin);
+
+    res.json({
+      nom: user.nom,
+      prenom: user.prenom,
+      email: user.email,
+      specialite: medecin.specialite,
+      numeroOrdre: medecin.numeroOrdre,
+      tarif: medecin.tarif,
+      secteur: medecin.secteur,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
   }
@@ -30,20 +28,11 @@ exports.getProfil = async (req, res) => {
 // PUT /medecin/profil
 exports.updateProfil = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
+    const medecin = await Medecin.findOne({ where: { id_utilisateur: req.user.id } });
     if (!medecin) return res.status(404).json({ message: 'Profil médecin introuvable' });
 
-    const {
-      specialite, tarifConsultation, secteur,
-      languesParlees, horairesDisponibilite,
-      dureeCreneauMinutes, biographie
-    } = req.body;
-
-    await medecin.update({
-      specialite, tarifConsultation, secteur,
-      languesParlees, horairesDisponibilite,
-      dureeCreneauMinutes, biographie
-    });
+    const { specialite, tarif, secteur } = req.body;
+    await medecin.update({ specialite, tarif, secteur });
 
     res.json({ message: 'Profil mis à jour', medecin });
   } catch (err) {
@@ -51,26 +40,13 @@ exports.updateProfil = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// 2. PLANNING — DISPONIBILITÉS
-// ─────────────────────────────────────────
-
-// GET /medecin/planning?date=2026-05-22
+// GET /medecin/planning
 exports.getPlanning = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
-    if (!medecin) return res.status(404).json({ message: 'Médecin introuvable' });
-
-    const { date } = req.query;
-
     const disponibilites = await Disponibilite.findAll({
-      where: {
-        medecinId: medecin.id,
-        ...(date && { date }),
-      },
-      order: [['date', 'ASC'], ['heureDebut', 'ASC']],
+      where: { id_medecin: req.user.id },
+      order: [['jour', 'ASC'], ['heureDebut', 'ASC']],
     });
-
     res.json(disponibilites);
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
@@ -80,33 +56,14 @@ exports.getPlanning = async (req, res) => {
 // POST /medecin/disponibilite
 exports.ajouterDisponibilite = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
-    if (!medecin) return res.status(404).json({ message: 'Médecin introuvable' });
-
-    const { date, heureDebut, heureFin } = req.body;
-
-    // Vérifier chevauchement
-    const chevauchement = await Disponibilite.findOne({
-      where: {
-        medecinId: medecin.id,
-        date,
-        [Op.or]: [
-          { heureDebut: { [Op.between]: [heureDebut, heureFin] } },
-          { heureFin:   { [Op.between]: [heureDebut, heureFin] } },
-        ],
-      },
-    });
-
-    if (chevauchement) {
-      return res.status(400).json({ message: 'Créneau qui chevauche une disponibilité existante' });
-    }
+    const { jour, heureDebut, heureFin, estConge } = req.body;
 
     const dispo = await Disponibilite.create({
-      medecinId: medecin.id,
-      date,
+      id_medecin: req.user.id,
+      jour,
       heureDebut,
       heureFin,
-      estDisponible: true,
+      estConge: estConge || false,
     });
 
     res.status(201).json({ message: 'Disponibilité ajoutée', dispo });
@@ -118,11 +75,9 @@ exports.ajouterDisponibilite = async (req, res) => {
 // DELETE /medecin/disponibilite/:id
 exports.supprimerDisponibilite = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
     const dispo = await Disponibilite.findOne({
-      where: { id: req.params.id, medecinId: medecin.id }
+      where: { id: req.params.id, id_medecin: req.user.id }
     });
-
     if (!dispo) return res.status(404).json({ message: 'Disponibilité introuvable' });
 
     await dispo.destroy();
@@ -132,17 +87,11 @@ exports.supprimerDisponibilite = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// 3. CONGÉS
-// ─────────────────────────────────────────
-
 // GET /medecin/conges
 exports.getConges = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
-    const conges = await Conge.findAll({
-      where: { medecinId: medecin.id },
-      order: [['dateDebut', 'ASC']],
+    const conges = await Disponibilite.findAll({
+      where: { id_medecin: req.user.id, estConge: true },
     });
     res.json(conges);
   } catch (err) {
@@ -153,16 +102,14 @@ exports.getConges = async (req, res) => {
 // POST /medecin/conge
 exports.ajouterConge = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
-    const { dateDebut, dateFin, motif } = req.body;
-
-    const conge = await Conge.create({
-      medecinId: medecin.id,
-      dateDebut,
-      dateFin,
-      motif,
+    const { jour, heureDebut, heureFin } = req.body;
+    const conge = await Disponibilite.create({
+      id_medecin: req.user.id,
+      jour,
+      heureDebut,
+      heureFin,
+      estConge: true,
     });
-
     res.status(201).json({ message: 'Congé ajouté', conge });
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
@@ -172,11 +119,9 @@ exports.ajouterConge = async (req, res) => {
 // DELETE /medecin/conge/:id
 exports.supprimerConge = async (req, res) => {
   try {
-    const medecin = await Medecin.findOne({ where: { userId: req.user.id } });
-    const conge = await Conge.findOne({
-      where: { id: req.params.id, medecinId: medecin.id }
+    const conge = await Disponibilite.findOne({
+      where: { id: req.params.id, id_medecin: req.user.id, estConge: true }
     });
-
     if (!conge) return res.status(404).json({ message: 'Congé introuvable' });
 
     await conge.destroy();
@@ -186,10 +131,6 @@ exports.supprimerConge = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// 4. PATIENTS DU JOUR
-// ─────────────────────────────────────────
-
 // GET /medecin/patients-jour
 exports.getPatientsJour = async (req, res) => {
   try {
@@ -197,15 +138,14 @@ exports.getPatientsJour = async (req, res) => {
 
     const rendezVous = await RendezVous.findAll({
       where: {
-        medecinId: req.user.id,
-        date: aujourd_hui,
+        dateHeure: {
+          [Op.between]: [
+            `${aujourd_hui} 00:00:00`,
+            `${aujourd_hui} 23:59:59`
+          ]
+        }
       },
-      include: [{
-        model: User,
-        as: 'patient',
-        attributes: ['id', 'nom', 'prenom', 'email'],
-      }],
-      order: [['heure', 'ASC']],
+      order: [['dateHeure', 'ASC']],
     });
 
     res.json(rendezVous);
@@ -214,92 +154,22 @@ exports.getPatientsJour = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────
-// 5. COMPTES RENDUS
-// ─────────────────────────────────────────
-
 // POST /medecin/compte-rendu
 exports.creerCompteRendu = async (req, res) => {
-  try {
-    const {
-      rendezVousId, patientId, motifConsultation,
-      diagnostic, observations, traitement, prochainRdv
-    } = req.body;
-
-    const compteRendu = await CompteRendu.create({
-      rendezVousId,
-      medecinId: req.user.id,
-      patientId,
-      motifConsultation,
-      diagnostic,
-      observations,
-      traitement,
-      prochainRdv,
-      dateConsultation: new Date(),
-    });
-
-    res.status(201).json({ message: 'Compte rendu créé', compteRendu });
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
-  }
+  res.status(501).json({ message: 'Non implémenté' });
 };
 
 // GET /medecin/compte-rendu/:patientId
 exports.getComptesRenduPatient = async (req, res) => {
-  try {
-    const comptesRendus = await CompteRendu.findAll({
-      where: {
-        medecinId: req.user.id,
-        patientId: req.params.patientId,
-      },
-      order: [['dateConsultation', 'DESC']],
-    });
-    res.json(comptesRendus);
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
-  }
+  res.status(501).json({ message: 'Non implémenté' });
 };
-
-// ─────────────────────────────────────────
-// 6. PRESCRIPTIONS
-// ─────────────────────────────────────────
 
 // POST /medecin/prescription
 exports.creerPrescription = async (req, res) => {
-  try {
-    const {
-      compteRenduId, patientId,
-      medicaments, dateExpiration, notes
-    } = req.body;
-
-    const prescription = await Prescription.create({
-      compteRenduId,
-      medecinId: req.user.id,
-      patientId,
-      medicaments,
-      dateEmission: new Date(),
-      dateExpiration,
-      notes,
-    });
-
-    res.status(201).json({ message: 'Prescription créée', prescription });
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
-  }
+  res.status(501).json({ message: 'Non implémenté' });
 };
 
 // GET /medecin/prescriptions/:patientId
 exports.getPrescriptionsPatient = async (req, res) => {
-  try {
-    const prescriptions = await Prescription.findAll({
-      where: {
-        medecinId: req.user.id,
-        patientId: req.params.patientId,
-      },
-      order: [['dateEmission', 'DESC']],
-    });
-    res.json(prescriptions);
-  } catch (err) {
-    res.status(500).json({ message: 'Erreur serveur', erreur: err.message });
-  }
+  res.status(501).json({ message: 'Non implémenté' });
 };

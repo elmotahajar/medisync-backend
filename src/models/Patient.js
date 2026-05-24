@@ -1,26 +1,29 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config');
 
-const Medecin = sequelize.define('Medecin', {
+const Patient = sequelize.define('Patient', {
   id_utilisateur: {
     type: DataTypes.INTEGER,
     primaryKey: true,
   },
-  specialite: {
+  numeroSecu: {
     type: DataTypes.STRING,
   },
-  numeroOrdre: {
+  dateNaissance: {
+    type: DataTypes.DATE,
+  },
+  adresse: {
     type: DataTypes.STRING,
   },
-  tarif: {
-    type: DataTypes.DOUBLE,
+  oauthProvider: {
+    type: DataTypes.STRING,
   },
-  secteur: {
+  id_tiers_rattache: {
     type: DataTypes.INTEGER,
   },
 }, {
-  tableName: 'medecin',
+  tableName: 'patient',
   timestamps: false,
 });
 
-module.exports = Medecin;
+module.exports = Patient;

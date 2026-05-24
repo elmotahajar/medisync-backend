@@ -1,7 +1,5 @@
-// src/models/Conge.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config');
-const Medecin = require('./Medecin');
 
 const Conge = sequelize.define('Conge', {
   id: {
@@ -9,39 +7,25 @@ const Conge = sequelize.define('Conge', {
     primaryKey: true,
     autoIncrement: true,
   },
-
-  medecinId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: Medecin,
-      key: 'id',
-    },
-    onDelete: 'CASCADE',
-  },
-
-  dateDebut: {
-    type: DataTypes.DATEONLY, // ex: "2026-06-01"
-    allowNull: false,
-  },
-
-  dateFin: {
-    type: DataTypes.DATEONLY, // ex: "2026-06-10"
-    allowNull: false,
-  },
-
-  motif: {
+  jour: {
     type: DataTypes.STRING,
-    allowNull: true, // ex: "Vacances", "Formation", "Maladie"
   },
-
+  heureDebut: {
+    type: DataTypes.TIME,
+  },
+  heureFin: {
+    type: DataTypes.TIME,
+  },
+  estConge: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  id_medecin: {
+    type: DataTypes.INTEGER,
+  },
 }, {
-  tableName: 'conges',
-  timestamps: true,
+  tableName: 'disponibilite',  // ✅ même table que Disponibilite
+  timestamps: false,
 });
-
-// Association
-Conge.belongsTo(Medecin, { foreignKey: 'medecinId', as: 'medecin' });
-Medecin.hasMany(Conge,   { foreignKey: 'medecinId', as: 'conges' });
 
 module.exports = Conge;

@@ -1,29 +1,37 @@
 const sequelize = require('../config');
-const User = require('./User');
-const RendezVous = require('./RendezVous');
-const Facture = require('./Facture');
-const FeuilleSoins = require('./FeuilleSoins');
 
-// ── Associations RendezVous ──────────────────
-RendezVous.belongsTo(User, { as: 'patient',    foreignKey: 'patientId' });
-RendezVous.belongsTo(User, { as: 'medecin',    foreignKey: 'medecinId' });
-
-// ── Associations Facture ─────────────────────
-Facture.belongsTo(User, { as: 'patient',       foreignKey: 'patientId' });
-Facture.belongsTo(User, { as: 'secretaire',    foreignKey: 'secretaireId' });
-
-// ── Associations FeuilleSoins ────────────────
-FeuilleSoins.belongsTo(User, { as: 'patient',  foreignKey: 'patientId' });
-FeuilleSoins.belongsTo(User, { as: 'medecin',  foreignKey: 'medecinId' });
-FeuilleSoins.belongsTo(User, { as: 'secretaire', foreignKey: 'secretaireId' });
-
-module.exports = { sequelize, User, RendezVous, Facture, FeuilleSoins };
-const AuditLog          = require('./AuditLog');
+const User           = require('./User');
+const Patient        = require('./Patient');
+const Medecin        = require('./Medecin');
+const Secretaire     = require('./Secretaire');
+const Administrateur = require('./Administrateur');
+const RendezVous     = require('./RendezVous');
+const Facture        = require('./Facture');
+const FeuilleSoins   = require('./FeuilleSoins');
+const AuditLog       = require('./AuditLog');
 const SalleConsultation = require('./SalleConsultation');
-const Tarif             = require('./Tarif');
+const Tarif          = require('./Tarif');
+
+// ── Associations ────────────────────────────
+Patient.belongsTo(User,        { foreignKey: 'id_utilisateur' });
+Medecin.belongsTo(User,        { foreignKey: 'id_utilisateur' });
+Secretaire.belongsTo(User,     { foreignKey: 'id_utilisateur' });
+Administrateur.belongsTo(User, { foreignKey: 'id_utilisateur' });
+
+RendezVous.belongsTo(Patient,  { foreignKey: 'id_patient' });
+Facture.belongsTo(Secretaire,  { foreignKey: 'id_secretaire' });
 
 module.exports = {
-  sequelize, User, RendezVous,
-  Facture, FeuilleSoins,
-  AuditLog, SalleConsultation, Tarif  // ← ajoute ces 3
+  sequelize,
+  Utilisateur: User,
+  Patient,
+  Medecin,
+  Secretaire,
+  Administrateur,
+  RendezVous,
+  Facture,
+  FeuilleSoins,
+  AuditLog,
+  SalleConsultation,
+  Tarif,
 };
